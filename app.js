@@ -200,54 +200,46 @@ async function loadWeather() {
   const url = "https://api.open-meteo.com/v1/forecast"
     + "?latitude=" + CONFIG.lat + "&longitude=" + CONFIG.lon
     + "&current=temperature_2m,weather_code"
-    + "&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max,precipitation_sum"
-    + "&forecast_days=6&timezone=" + encodeURIComponent(CONFIG.tz);
+    + "&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max"
+    + "&forecast_days=3&timezone=" + encodeURIComponent(CONFIG.tz);
   try {
     const r = await fetch(url, { cache: "no-store" });
     if (!r.ok) throw new Error("weather " + r.status);
     const j = await r.json();
     const d = j.daily;
     const cTemp = Math.round(j.current.temperature_2m);
-    const cCode = j.current.weather_code;
-    const cDesc = WMO[cCode] || "Weather";
-    const todayRain = d.precipitation_probability_max ? d.precipitation_probability_max[0] : null;
-
-    // small current block in the header
-    $("wTemp").textContent = cTemp + "°";
-    $("wDesc").textContent = cDesc;
-
-    // prominent current block in the weather panel
-    $("wxNow").innerHTML =
-      '<span class="wx-ico">' + wxSvg(wmoCat(cCode)) + '</span>'
-      + '<span class="wx-now-temp">' + cTemp + '°</span>'
-      + '<span class="wx-now-main"><span class="wx-now-text">' + cDesc + '</span>'
-      + (todayRain != null && todayRain > 0 ? '<span class="wx-now-rain">Rain ' + Math.round(todayRain) + '%</span>' : '')
-      + '</span>';
-
-    // multi-day forecast rows
-    const n = Math.min(6, d.time.length);
-    let rows = "";
+    const n = Math.min(3, d.time.length);
+    let cols = "";
     for (let i = 0; i < n; i++) {
       const prob = d.precipitation_probability_max ? d.precipitation_probability_max[i] : null;
-      const sum = d.precipitation_sum ? d.precipitation_sum[i] : 0;
-      const wet = (prob != null && prob > 0) || (sum != null && sum >= 0.1);
       const hi = Math.round(d.temperature_2m_max[i]);
       const lo = Math.round(d.temperature_2m_min[i]);
-      rows += "<li>"
-        + '<span class="d-day">' + dayLabel(i, d.time[i]) + "</span>"
-        + '<span class="d-ico">' + wxSvg(wmoCat(d.weather_code[i])) + "</span>"
-        + '<span class="d-rain">' + (wet && prob != null ? Math.round(prob) + "%" : '<span class="d-blank">&mdash;</span>') + "</span>"
-        + '<span class="d-mm">' + (wet ? mmFmt(sum) : '<span class="d-blank">&nbsp;</span>') + "</span>"
-        + '<span class="d-temp">' + hi + "° <span class=\"lo\">" + lo + "°</span></span>"
-        + "</li>";
+      const big = (i === 0 ? cTemp : hi);
+      cols += '<div class="wx3-col">'
+        + '<div class="wx3-day">' + dayLabel(i, d.time[i]) + '</div>'
+        + '<div class="wx3-ico">' + wxSvg(wmoCat(d.weather_code[i])) + '</div>'
+        + '<div class="wx3-temp">' + big + '°<span class="lo">' + lo + '°</span></div>'
+        + '<div class="wx3-rain">' + (prob != null && prob > 0 ? Math.round(prob) + '%' : '&nbsp;') + '</div>'
+        + '</div>';
     }
-    $("wxDays").innerHTML = rows;
+    $("wx3").innerHTML = cols;
     setStatus("Updated " + pad(new Date().getHours()) + ":" + pad(new Date().getMinutes()));
   } catch (e) {
-    $("wDesc").textContent = "Weather offline";
-    $("wxNow").innerHTML = '<span class="muted">Weather unavailable</span>';
+    $("wx3").innerHTML = '<span class="muted">Weather offline</span>';
     setStatus("Weather: " + (e && e.message ? String(e.message).slice(0, 70) : "error"));
   }
+}
+
+/* ---------------- quote of the day ---------------- */
+function renderQuote() {
+  const q = window.FAMILY_QUOTES || [];
+  if (!q.length) return;
+  const now = new Date();
+  const start = new Date(now.getFullYear(), 0, 0);
+  const doy = Math.floor((now - start) / 86400000);
+  const pick = q[doy % q.length];
+  $("quote").innerHTML = '<span class="q-text">“' + escapeHtml(pick.t) + '”</span>'
+    + '<span class="q-author">' + escapeHtml(pick.a) + '</span>';
 }
 
 /* ---------------- agenda ---------------- */
@@ -283,11 +275,15 @@ function renderDinner(events) {
   $("dinnerHint").textContent = training ? "training night, quick picks" : "pick one";
   $("meals").innerHTML = picks.map((m) => {
     const tag = m.quick ? '<span class="tag quick">Quick</span>' : '<span class="tag">Cook-up</span>';
+    const photo = m.img ? '<div class="m-photo"><img src="' + m.img + '" alt="" loading="lazy" referrerpolicy="no-referrer"></div>' : "";
     return '<li class="meal">'
+      + photo
+      + '<div class="m-body">'
       + '<div class="m-name">' + escapeHtml(m.name) + "</div>"
       + '<div class="m-tags">' + tag + "</div>"
       + '<div class="m-buy">' + escapeHtml(m.buy) + "</div>"
       + '<div class="m-link">' + shortLink(m.link) + "</div>"
+      + "</div>"
       + "</li>";
   }).join("");
 }
@@ -348,6 +344,7 @@ function init() {
   tickClock();
   setInterval(tickClock, 1000);
 
+  renderQuote();
   loadWeather();
   setInterval(loadWeather, CONFIG.weatherEveryMs);
 
@@ -361,7 +358,7 @@ function init() {
 function scheduleMidnight() {
   const now = new Date();
   const next = new Date(now); next.setHours(24, 0, 30, 0);
-  setTimeout(() => { refreshEvents(); scheduleMidnight(); }, next - now);
+  setTimeout(() => { renderQuote(); loadWeather(); refreshEvents(); scheduleMidnight(); }, next - now);
 }
 
 document.addEventListener("DOMContentLoaded", init);

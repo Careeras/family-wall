@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="color-scheme" content="light">
 <title>Family Wall</title>
-<link rel="stylesheet" href="style.css?v=4">
+<link rel="stylesheet" href="style.css?v=5">
 <script src="https://accounts.google.com/gsi/client" async></script>
 </head>
 <body>
@@ -16,12 +16,8 @@
       <div class="clock" id="clock">--:--</div>
       <div class="date" id="date">&nbsp;</div>
     </div>
-    <div class="weather-now" id="weatherNow" aria-live="polite">
-      <div class="w-temp" id="wTemp">--&deg;</div>
-      <div class="w-meta">
-        <div class="w-desc" id="wDesc">Weather</div>
-        <div class="w-place">Farum</div>
-      </div>
+    <div class="wx3" id="wx3" aria-label="Three day weather for Farum">
+      <span class="muted">Weather...</span>
     </div>
   </header>
 
@@ -42,10 +38,9 @@
       <ul class="countdowns" id="countdowns"><li class="muted">Loading...</li></ul>
     </section>
 
-    <section class="card wx" aria-labelledby="wxH">
-      <h2 id="wxH" class="card-h">Weather <span class="hint">Farum</span></h2>
-      <div class="wx-now" id="wxNow"><span class="muted">Loading...</span></div>
-      <ul class="wx-days" id="wxDays"></ul>
+    <section class="card quote" aria-labelledby="quoteH">
+      <h2 id="quoteH" class="card-h">Quote of the day</h2>
+      <blockquote class="q" id="quote"><span class="muted">&nbsp;</span></blockquote>
     </section>
 
   </main>
@@ -58,7 +53,8 @@
 </div>
 
 <noscript>This wall needs JavaScript.</noscript>
-<script src="menu.js?v=4"></script>
-<script src="app.js?v=4"></script>
+<script src="quotes.js?v=5"></script>
+<script src="menu.js?v=5"></script>
+<script src="app.js?v=5"></script>
 </body>
 </html>
