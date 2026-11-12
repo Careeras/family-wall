@@ -311,9 +311,10 @@ function shortLink(url) {
 /* ---------------- coming up (today + upcoming, merged) ---------------- */
 function renderCountdowns(events) {
   const now = new Date();
-  const from = startOfDay(now);
+  const today0 = startOfDay(now);
+  // Only upcoming: future timed events, plus all-day events for today or later. No done events.
   const list = events
-    .filter((e) => e.start >= from)
+    .filter((e) => (e.allDay ? startOfDay(e.start) >= today0 : e.start >= now))
     .sort((a, b) => a.start - b.start)
     .slice(0, 8);
   const ul = $("countdowns");
