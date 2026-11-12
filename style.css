@@ -70,10 +70,10 @@ body {
   display: grid;
   grid-template-columns: 1fr 1fr;
   grid-template-areas:
+    "quote quote"
     "agenda agenda"
-    "dinner dinner"
     "coming coming"
-    "quote quote";
+    "dinner dinner";
   gap: 22px;
 }
 .agenda { grid-area: agenda; }
@@ -201,8 +201,8 @@ ul { list-style: none; margin: 0; padding: 0; }
 @media (min-aspect-ratio: 1/1) {
   .grid {
     grid-template-areas:
-      "agenda dinner"
-      "coming quote";
+      "quote quote"
+      "agenda coming"
+      "dinner dinner";
   }
-  .meals { grid-template-columns: 1fr; }
 }
