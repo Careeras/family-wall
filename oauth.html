@@ -14,13 +14,18 @@
   var h = location.hash ? location.hash.substring(1) : "";
   var inFrame = (window.parent && window.parent !== window);
   if (inFrame) {
+    // silent renewal: the parent verifies the state before trusting the token
     try { window.parent.postMessage({ fw_oauth: h }, location.origin); } catch (e) {}
     return;
   }
   try {
     var p = new URLSearchParams(h);
+    var returned = p.get("state");
+    var expected = sessionStorage.getItem("fw_state");
+    sessionStorage.removeItem("fw_state");
     var t = p.get("access_token");
-    if (t) {
+    // CSRF guard: only trust the token if the state round-trips exactly.
+    if (t && returned && expected && returned === expected) {
       var e = Date.now() + ((parseInt(p.get("expires_in"), 10) || 3600) - 60) * 1000;
       localStorage.setItem("fw_tok", JSON.stringify({ t: t, e: e }));
       localStorage.setItem("fw_granted", "1");

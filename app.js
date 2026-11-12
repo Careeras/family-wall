@@ -76,13 +76,21 @@ function _granted() {
   try { return localStorage.getItem("fw_granted") === "1"; } catch (e) { return false; }
 }
 
-function _authUrl(prompt) {
+function _newState() {
+  try {
+    const a = new Uint8Array(16); crypto.getRandomValues(a);
+    return Array.from(a, (b) => b.toString(16).padStart(2, "0")).join("");
+  } catch (e) { return String(Date.now()) + Math.random().toString(16).slice(2); }
+}
+
+function _authUrl(prompt, state) {
   const p = new URLSearchParams();
   p.set("client_id", CONFIG.googleClientId);
   p.set("redirect_uri", REDIRECT_URI);
   p.set("response_type", "token");
   p.set("scope", CONFIG.calendarScope);
   p.set("include_granted_scopes", "true");
+  if (state) p.set("state", state);
   if (prompt) p.set("prompt", prompt);
   return AUTH_ENDPOINT + "?" + p.toString();
 }
@@ -94,9 +102,10 @@ function _silentRenew() {
     const ifr = document.createElement("iframe");
     ifr.style.display = "none";
     ifr.setAttribute("aria-hidden", "true");
+    const state = _newState();
     const timer = setTimeout(() => _endSilent(null, "timeout"), 12000);
-    _silent = { resolve, reject, ifr, timer };
-    ifr.src = _authUrl("none");
+    _silent = { resolve, reject, ifr, timer, state };
+    ifr.src = _authUrl("none", state);
     document.body.appendChild(ifr);
   });
 }
@@ -113,6 +122,8 @@ window.addEventListener("message", (ev) => {
   const d = ev.data;
   if (!d || typeof d.fw_oauth !== "string") return;
   const h = new URLSearchParams(d.fw_oauth);
+  // CSRF guard: the returned state must match the one we created for this silent request.
+  if (!_silent || !h.get("state") || h.get("state") !== _silent.state) { _endSilent(null, "state mismatch"); return; }
   const t = h.get("access_token");
   if (t) {
     _accessToken = t;
@@ -155,7 +166,9 @@ async function loadGoogleCalendar() {
 // Interactive sign-in: a full-page redirect to Google (no popup needed).
 function signInInteractive() {
   setStatus("Signing in...");
-  location.href = _authUrl("");
+  const state = _newState();
+  try { sessionStorage.setItem("fw_state", state); } catch (e) {}
+  location.href = _authUrl("", state);
 }
 
 /* ---------------- utilities ---------------- */
