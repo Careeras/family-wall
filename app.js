@@ -8,7 +8,7 @@ const CONFIG = {
   weatherEveryMs: 30 * 60 * 1000,
   eventsEveryMs: 15 * 60 * 1000,
   mealCount: 3,
-  // Google OAuth (public client ID, browser token flow, read-only calendar). Household account serry.hos.
+  // Google OAuth (public client ID, browser token flow, read-only calendar). Household account only.
   googleClientId: "908805586296-b8nla3dfcv0hovecsu45rqa5jf4ivkuv.apps.googleusercontent.com",
   calendarScope: "https://www.googleapis.com/auth/calendar.readonly",
   calendarDaysAhead: 21,
