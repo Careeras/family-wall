@@ -54,6 +54,20 @@ let _tokenClient = null;
 let _accessToken = null;
 let _tokenExpiry = 0;
 let _pending = null;   // {resolve, reject}
+let _cacheLoaded = false;
+
+// Cache the access token across reloads so one sign-in keeps the calendar for the session.
+function _loadCachedToken() {
+  if (_cacheLoaded) return;
+  _cacheLoaded = true;
+  try {
+    const o = JSON.parse(localStorage.getItem("fw_tok") || "null");
+    if (o && o.t && o.e && Date.now() < o.e) { _accessToken = o.t; _tokenExpiry = o.e; }
+  } catch (e) { /* storage may be blocked */ }
+}
+function _saveToken() {
+  try { localStorage.setItem("fw_tok", JSON.stringify({ t: _accessToken, e: _tokenExpiry })); } catch (e) { /* ignore */ }
+}
 
 function _initTokenClient() {
   if (_tokenClient) return true;
@@ -67,6 +81,7 @@ function _initTokenClient() {
       if (resp && resp.access_token) {
         _accessToken = resp.access_token;
         _tokenExpiry = Date.now() + ((resp.expires_in || 3600) - 60) * 1000;
+        _saveToken();
         p.resolve(_accessToken);
       } else {
         p.reject(new Error(resp && resp.error ? resp.error : "no token"));
@@ -84,6 +99,7 @@ function _initTokenClient() {
 // interactive=true  -> show the Google consent/account chooser (must be from a tap)
 function _getToken(interactive) {
   return new Promise((resolve, reject) => {
+    _loadCachedToken();
     if (_accessToken && Date.now() < _tokenExpiry) { resolve(_accessToken); return; }
     if (!_initTokenClient()) { reject(new Error("GIS not loaded")); return; }
     _pending = { resolve, reject };
@@ -274,17 +290,11 @@ function renderDinner(events) {
 
   $("dinnerHint").textContent = training ? "training night, quick picks" : "pick one";
   $("meals").innerHTML = picks.map((m) => {
-    const tag = m.quick ? '<span class="tag quick">Quick</span>' : '<span class="tag">Cook-up</span>';
     const photo = m.img ? '<div class="m-photo"><img src="' + m.img + '" alt="" loading="lazy" referrerpolicy="no-referrer"></div>' : "";
-    return '<li class="meal">'
+    return '<li class="meal"><a class="m-card" href="' + m.link + '" target="_blank" rel="noopener">'
       + photo
-      + '<div class="m-body">'
-      + '<div class="m-name">' + escapeHtml(m.name) + "</div>"
-      + '<div class="m-tags">' + tag + "</div>"
-      + '<div class="m-buy">' + escapeHtml(m.buy) + "</div>"
-      + '<div class="m-link">' + shortLink(m.link) + "</div>"
-      + "</div>"
-      + "</li>";
+      + '<div class="m-body"><div class="m-name">' + escapeHtml(m.name) + "</div></div>"
+      + "</a></li>";
   }).join("");
 }
 
