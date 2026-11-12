@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="color-scheme" content="light">
 <title>Family Wall</title>
-<link rel="stylesheet" href="style.css?v=7">
+<link rel="stylesheet" href="style.css?v=8">
 <script src="https://accounts.google.com/gsi/client" async></script>
 </head>
 <body>
@@ -23,14 +23,9 @@
 
   <main class="grid">
 
-    <section class="card agenda" aria-labelledby="agendaH">
-      <h2 id="agendaH" class="card-h">Today</h2>
-      <ul class="events" id="todayEvents"><li class="muted">Loading...</li></ul>
-    </section>
-
-    <section class="card dinner" aria-labelledby="dinnerH">
-      <h2 id="dinnerH" class="card-h">Tonight's dinner <span class="hint" id="dinnerHint"></span></h2>
-      <ul class="meals" id="meals"><li class="muted">Loading...</li></ul>
+    <section class="card quote" aria-labelledby="quoteH">
+      <h2 id="quoteH" class="card-h">Quote of the day</h2>
+      <blockquote class="q" id="quote"><span class="muted">&nbsp;</span></blockquote>
     </section>
 
     <section class="card coming" aria-labelledby="comingH">
@@ -38,9 +33,9 @@
       <ul class="countdowns" id="countdowns"><li class="muted">Loading...</li></ul>
     </section>
 
-    <section class="card quote" aria-labelledby="quoteH">
-      <h2 id="quoteH" class="card-h">Quote of the day</h2>
-      <blockquote class="q" id="quote"><span class="muted">&nbsp;</span></blockquote>
+    <section class="card dinner" aria-labelledby="dinnerH">
+      <h2 id="dinnerH" class="card-h">Tonight's dinner <span class="hint" id="dinnerHint"></span></h2>
+      <ul class="meals" id="meals"><li class="muted">Loading...</li></ul>
     </section>
 
   </main>
@@ -53,8 +48,8 @@
 </div>
 
 <noscript>This wall needs JavaScript.</noscript>
-<script src="quotes.js?v=7"></script>
-<script src="menu.js?v=7"></script>
-<script src="app.js?v=7"></script>
+<script src="quotes.js?v=8"></script>
+<script src="menu.js?v=8"></script>
+<script src="app.js?v=8"></script>
 </body>
 </html>

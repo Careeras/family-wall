@@ -258,35 +258,40 @@ function renderQuote() {
     + '<span class="q-author">' + escapeHtml(pick.a) + '</span>';
 }
 
-/* ---------------- agenda ---------------- */
-function renderAgenda(events) {
-  const today = events
-    .filter((e) => sameDay(e.start, new Date()))
-    .sort((a, b) => a.start - b.start);
-  const ul = $("todayEvents");
-  if (!today.length) {
-    ul.innerHTML = '<li class="ev-free">Nothing on today</li>';
-    return;
-  }
-  ul.innerHTML = today.map((e) => {
-    const time = e.allDay ? '<span class="ev-time ev-all">All day</span>'
-      : '<span class="ev-time">' + pad(e.start.getHours()) + ":" + pad(e.start.getMinutes()) + '</span>';
-    return "<li>" + time + '<span class="ev-title">' + escapeHtml(e.title) + "</span></li>";
-  }).join("");
-}
-
 function isTrainingToday(events) {
   return events.some((e) => sameDay(e.start, new Date()) && !e.allDay && CONFIG.trainingRe.test(e.title));
 }
 
 /* ---------------- dinner shortlist ---------------- */
+// pick N meals that differ in BOTH protein and form (no two shrimp, no two wraps, etc.)
+function pickDiverse(pool, count) {
+  const picks = [], usedP = new Set(), usedF = new Set();
+  for (const m of pool) {
+    if (picks.length >= count) break;
+    if (usedP.has(m.protein) || usedF.has(m.form)) continue;
+    picks.push(m); usedP.add(m.protein); usedF.add(m.form);
+  }
+  if (picks.length < count) {           // relax: keep protein distinct, allow form repeat
+    for (const m of pool) {
+      if (picks.length >= count) break;
+      if (picks.indexOf(m) !== -1 || usedP.has(m.protein)) continue;
+      picks.push(m); usedP.add(m.protein);
+    }
+  }
+  for (const m of pool) {               // last resort: fill with anything left
+    if (picks.length >= count) break;
+    if (picks.indexOf(m) === -1) picks.push(m);
+  }
+  return picks;
+}
+
 function renderDinner(events) {
   const menu = window.FAMILY_MENU || [];
   const training = isTrainingToday(events);
   const pool = training ? menu.filter((m) => m.quick) : menu;   // no pork is already baked into the menu
   const now = new Date();
   const seed = now.getFullYear() * 10000 + (now.getMonth() + 1) * 100 + now.getDate();
-  const picks = seededShuffle(pool.length ? pool : menu, seed).slice(0, CONFIG.mealCount);
+  const picks = pickDiverse(seededShuffle(pool.length ? pool : menu, seed), CONFIG.mealCount);
 
   $("dinnerHint").textContent = training ? "training night, quick picks" : "pick one";
   $("meals").innerHTML = picks.map((m) => {
@@ -303,26 +308,27 @@ function shortLink(url) {
   catch (e) { return ""; }
 }
 
-/* ---------------- coming up (all upcoming events after today) ---------------- */
+/* ---------------- coming up (today + upcoming, merged) ---------------- */
 function renderCountdowns(events) {
   const now = new Date();
-  const tomorrow0 = new Date(startOfDay(now)); tomorrow0.setDate(tomorrow0.getDate() + 1);
-  const upcoming = events
-    .filter((e) => e.start >= tomorrow0)
+  const from = startOfDay(now);
+  const list = events
+    .filter((e) => e.start >= from)
     .sort((a, b) => a.start - b.start)
-    .slice(0, 6);
+    .slice(0, 8);
   const ul = $("countdowns");
-  if (!upcoming.length) { ul.innerHTML = '<li class="muted">Nothing coming up</li>'; return; }
-  ul.innerHTML = upcoming.map((e) => {
+  if (!list.length) { ul.innerHTML = '<li class="muted">Nothing scheduled</li>'; return; }
+  ul.innerHTML = list.map((e) => {
     const d = daysBetween(now, e.start);
-    let when;
-    if (d === 1) when = "Tomorrow";
-    else if (d < 7) when = e.start.toLocaleDateString("en-GB", { weekday: "long" });
-    else when = e.start.toLocaleDateString("en-GB", { weekday: "short", day: "numeric", month: "short" });
+    let label;
+    if (d <= 0) label = "Today";
+    else if (d === 1) label = "Tomorrow";
+    else if (d < 7) label = e.start.toLocaleDateString("en-GB", { weekday: "long" });
+    else label = e.start.toLocaleDateString("en-GB", { weekday: "short", day: "numeric", month: "short" });
     const time = e.allDay ? "" : " " + pad(e.start.getHours()) + ":" + pad(e.start.getMinutes());
-    const soon = d <= 2 ? " soon" : "";
+    const cls = d <= 0 ? " today" : (d <= 2 ? " soon" : "");
     return "<li>" + '<span class="cd-title">' + escapeHtml(e.title) + "</span>"
-      + '<span class="cd-when' + soon + '">' + when + escapeHtml(time) + "</span></li>";
+      + '<span class="cd-when' + cls + '">' + label + escapeHtml(time) + "</span></li>";
   }).join("");
 }
 
@@ -334,16 +340,14 @@ function escapeHtml(s) {
 async function refreshEvents() {
   try {
     const events = await getEvents();
-    renderAgenda(events);
-    renderDinner(events);
     renderCountdowns(events);
+    renderDinner(events);
     $("signin").hidden = true;
   } catch (e) {
     // Live path not ready / session dropped -> offer a sign-in and keep the rest alive.
-    $("todayEvents").innerHTML = '<li class="muted">Tap Sign in to show the calendar</li>';
+    $("countdowns").innerHTML = '<li class="muted">Tap Sign in to show the calendar</li>';
     $("signin").hidden = USE_MOCK;   // only show the button once the live path exists
     renderDinner([]);                 // still suggest meals even with no calendar
-    renderCountdowns([]);
   }
 }
 
