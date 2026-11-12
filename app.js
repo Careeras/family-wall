@@ -8,6 +8,10 @@ const CONFIG = {
   weatherEveryMs: 30 * 60 * 1000,
   eventsEveryMs: 15 * 60 * 1000,
   mealCount: 3,
+  // Google OAuth (public client ID, browser token flow, read-only calendar). Household account serry.hos.
+  googleClientId: "908805586296-b8nla3dfcv0hovecsu45rqa5jf4ivkuv.apps.googleusercontent.com",
+  calendarScope: "https://www.googleapis.com/auth/calendar.readonly",
+  calendarDaysAhead: 21,
   // A timed event whose title matches this is a "training night" -> prefer quick meals.
   trainingRe: /\b(tennis|football|fodbold|gym|gymnastik|tr[aæ]ning|sv[oø]m|h[aå]ndbold|basket|kamp|turnering|st[aæ]vne)\b/i,
   // Upcoming events that read like a competition, for the countdowns panel.
@@ -23,7 +27,7 @@ const CONFIG = {
    (Google Identity Services token client, scope calendar.readonly,
     the household account). See OAUTH-SETUP.md (kept in the private repo).
    ====================================================================== */
-const USE_MOCK = true;
+const USE_MOCK = false;
 
 function getEvents() {
   if (USE_MOCK) return Promise.resolve(mockEvents());
@@ -45,9 +49,76 @@ function mockEvents() {
   ];
 }
 
-// Placeholder for the live path (filled in step 5 of the build).
-function loadGoogleCalendar() {
-  return Promise.reject(new Error("Google Calendar not wired yet"));
+// --- Live Google Calendar via Google Identity Services (browser token flow) ---
+let _tokenClient = null;
+let _accessToken = null;
+let _tokenExpiry = 0;
+let _pending = null;   // {resolve, reject}
+
+function _initTokenClient() {
+  if (_tokenClient) return true;
+  if (!(window.google && google.accounts && google.accounts.oauth2)) return false;
+  _tokenClient = google.accounts.oauth2.initTokenClient({
+    client_id: CONFIG.googleClientId,
+    scope: CONFIG.calendarScope,
+    callback: (resp) => {
+      const p = _pending; _pending = null;
+      if (!p) return;
+      if (resp && resp.access_token) {
+        _accessToken = resp.access_token;
+        _tokenExpiry = Date.now() + ((resp.expires_in || 3600) - 60) * 1000;
+        p.resolve(_accessToken);
+      } else {
+        p.reject(new Error(resp && resp.error ? resp.error : "no token"));
+      }
+    },
+    error_callback: (err) => {
+      const p = _pending; _pending = null;
+      if (p) p.reject(new Error(err && err.type ? err.type : "oauth error"));
+    }
+  });
+  return true;
+}
+
+// interactive=false -> silent renewal (no popup, needs an existing grant + live session)
+// interactive=true  -> show the Google consent/account chooser (must be from a tap)
+function _getToken(interactive) {
+  return new Promise((resolve, reject) => {
+    if (_accessToken && Date.now() < _tokenExpiry) { resolve(_accessToken); return; }
+    if (!_initTokenClient()) { reject(new Error("GIS not loaded")); return; }
+    _pending = { resolve, reject };
+    try {
+      _tokenClient.requestAccessToken({ prompt: interactive ? "consent" : "none" });
+    } catch (e) {
+      _pending = null; reject(e);
+    }
+  });
+}
+
+async function loadGoogleCalendar() {
+  const token = await _getToken(false);   // silent; the Sign in button does the interactive one
+  const now = new Date();
+  const max = new Date(now); max.setDate(max.getDate() + CONFIG.calendarDaysAhead);
+  const url = "https://www.googleapis.com/calendar/v3/calendars/primary/events"
+    + "?singleEvents=true&orderBy=startTime&maxResults=50"
+    + "&timeMin=" + encodeURIComponent(startOfDay(now).toISOString())
+    + "&timeMax=" + encodeURIComponent(max.toISOString());
+  const r = await fetch(url, { headers: { Authorization: "Bearer " + token }, cache: "no-store" });
+  if (r.status === 401) { _accessToken = null; _tokenExpiry = 0; throw new Error("calendar 401"); }
+  if (!r.ok) throw new Error("calendar " + r.status);
+  const j = await r.json();
+  return (j.items || []).map((ev) => {
+    const allDay = !!(ev.start && ev.start.date);
+    const start = new Date(allDay ? ev.start.date + "T00:00:00" : ev.start.dateTime);
+    const endRaw = allDay ? (ev.end && ev.end.date ? ev.end.date + "T00:00:00" : null) : (ev.end && ev.end.dateTime);
+    const end = endRaw ? new Date(endRaw) : new Date(start.getTime() + 3600000);
+    return { title: ev.summary || "(no title)", start, end, allDay };
+  });
+}
+
+function signInInteractive() {
+  setStatus("Signing in...");
+  _getToken(true).then(() => refreshEvents()).catch(() => setStatus("Sign-in failed, tap to retry"));
 }
 
 /* ---------------- utilities ---------------- */
@@ -195,7 +266,7 @@ async function refreshEvents() {
     $("signin").hidden = true;
   } catch (e) {
     // Live path not ready / session dropped -> offer a sign-in and keep the rest alive.
-    $("todayEvents").innerHTML = '<li class="muted">Calendar not connected</li>';
+    $("todayEvents").innerHTML = '<li class="muted">Tap Sign in to show the calendar</li>';
     $("signin").hidden = USE_MOCK;   // only show the button once the live path exists
     renderDinner([]);                 // still suggest meals even with no calendar
     renderCountdowns([]);
@@ -203,6 +274,9 @@ async function refreshEvents() {
 }
 
 function init() {
+  const signinBtn = $("signin");
+  if (signinBtn) signinBtn.addEventListener("click", signInInteractive);
+
   tickClock();
   setInterval(tickClock, 1000);
 
