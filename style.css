@@ -1,5 +1,6 @@
 /* Family wall - light kitchen look. Portrait tablet (Tab A8, ~1200x1920). */
 :root {
+  color-scheme: light;
   --bg: #f4f6f9;
   --bg2: #ffffff;
   --ink: #15202b;
