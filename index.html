@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="light">
+<title>Family Wall</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="wall">
+
+  <header class="top">
+    <div class="when">
+      <div class="clock" id="clock">--:--</div>
+      <div class="date" id="date">&nbsp;</div>
+    </div>
+    <div class="weather-now" id="weatherNow" aria-live="polite">
+      <div class="w-temp" id="wTemp">--&deg;</div>
+      <div class="w-meta">
+        <div class="w-desc" id="wDesc">Weather</div>
+        <div class="w-place">Farum</div>
+      </div>
+    </div>
+  </header>
+
+  <main class="grid">
+
+    <section class="card agenda" aria-labelledby="agendaH">
+      <h2 id="agendaH" class="card-h">Today</h2>
+      <ul class="events" id="todayEvents"><li class="muted">Loading...</li></ul>
+    </section>
+
+    <section class="card dinner" aria-labelledby="dinnerH">
+      <h2 id="dinnerH" class="card-h">Tonight's dinner <span class="hint" id="dinnerHint"></span></h2>
+      <ul class="meals" id="meals"><li class="muted">Loading...</li></ul>
+    </section>
+
+    <section class="card coming" aria-labelledby="comingH">
+      <h2 id="comingH" class="card-h">Coming up</h2>
+      <ul class="countdowns" id="countdowns"><li class="muted">Loading...</li></ul>
+    </section>
+
+    <section class="card wx" aria-labelledby="wxH">
+      <h2 id="wxH" class="card-h">Weather</h2>
+      <div class="wx-today" id="wxToday"><span class="muted">Loading...</span></div>
+    </section>
+
+  </main>
+
+  <footer class="foot">
+    <span id="status" class="status"></span>
+    <button id="signin" class="signin" type="button" hidden>Sign in</button>
+  </footer>
+
+</div>
+
+<noscript>This wall needs JavaScript.</noscript>
+<script src="menu.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
