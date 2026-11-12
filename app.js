@@ -159,27 +159,89 @@ const WMO = {
   85: "Snow showers", 86: "Snow showers", 95: "Thunderstorm", 96: "Thunderstorm", 99: "Thunderstorm"
 };
 
+function wmoCat(c) {
+  if (c === 0) return "clear";
+  if (c === 1 || c === 2) return "partly";
+  if (c === 3) return "cloud";
+  if (c === 45 || c === 48) return "fog";
+  if ((c >= 71 && c <= 77) || c === 85 || c === 86) return "snow";
+  if (c >= 95) return "thunder";
+  if ((c >= 51 && c <= 67) || (c >= 80 && c <= 82)) return "rain";
+  return "cloud";
+}
+
+// Inline SVG weather icons (no emoji, per the voice charter). cat -> svg string.
+const _CLOUD = '<g fill="#9aa7b4"><circle cx="24" cy="36" r="10"/><circle cx="38" cy="31" r="13"/><circle cx="47" cy="40" r="9"/><rect x="20" y="40" width="31" height="10" rx="5"/></g>';
+function wxSvg(cat) {
+  const sun = '<circle cx="32" cy="30" r="11" fill="#f5a623"/><g stroke="#f5a623" stroke-width="3" stroke-linecap="round"><line x1="32" y1="6" x2="32" y2="13"/><line x1="32" y1="47" x2="32" y2="54"/><line x1="8" y1="30" x2="15" y2="30"/><line x1="49" y1="30" x2="56" y2="30"/><line x1="14" y1="12" x2="19" y2="17"/><line x1="45" y1="43" x2="50" y2="48"/><line x1="50" y1="12" x2="45" y2="17"/><line x1="19" y1="43" x2="14" y2="48"/></g>';
+  const inner = {
+    clear: '<svg viewBox="0 0 64 64" aria-hidden="true">' + sun + '</svg>',
+    partly: '<svg viewBox="0 0 64 64" aria-hidden="true"><circle cx="23" cy="22" r="8" fill="#f5a623"/><g stroke="#f5a623" stroke-width="2.5" stroke-linecap="round"><line x1="23" y1="4" x2="23" y2="9"/><line x1="7" y1="22" x2="12" y2="22"/><line x1="11" y1="10" x2="14" y2="13"/><line x1="35" y1="10" x2="32" y2="13"/></g>' + _CLOUD + '</svg>',
+    cloud: '<svg viewBox="0 0 64 64" aria-hidden="true">' + _CLOUD + '</svg>',
+    fog: '<svg viewBox="0 0 64 64" aria-hidden="true">' + _CLOUD + '<g stroke="#9aa7b4" stroke-width="3" stroke-linecap="round"><line x1="20" y1="55" x2="44" y2="55"/><line x1="25" y1="61" x2="39" y2="61"/></g></svg>',
+    rain: '<svg viewBox="0 0 64 64" aria-hidden="true">' + _CLOUD + '<g stroke="#2f7fe0" stroke-width="3.2" stroke-linecap="round"><line x1="26" y1="53" x2="23" y2="61"/><line x1="34" y1="53" x2="31" y2="61"/><line x1="42" y1="53" x2="39" y2="61"/></g></svg>',
+    snow: '<svg viewBox="0 0 64 64" aria-hidden="true">' + _CLOUD + '<g fill="#cfe0ef"><circle cx="26" cy="57" r="2.6"/><circle cx="34" cy="59" r="2.6"/><circle cx="42" cy="57" r="2.6"/></g></svg>',
+    thunder: '<svg viewBox="0 0 64 64" aria-hidden="true">' + _CLOUD + '<path d="M34 50 l-9 11 h6 l-4 9 13 -13 h-6 z" fill="#f5c518"/></svg>'
+  };
+  return inner[cat] || inner.cloud;
+}
+
+function mmFmt(x) {
+  const v = (x == null ? 0 : x);
+  return v.toLocaleString("da-DK", { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + " mm";
+}
+function dayLabel(i, iso) {
+  if (i === 0) return "Today";
+  if (i === 1) return "Tomorrow";
+  return new Date(iso + "T00:00:00").toLocaleDateString("en-GB", { weekday: "short" });
+}
+
 async function loadWeather() {
   const url = "https://api.open-meteo.com/v1/forecast"
     + "?latitude=" + CONFIG.lat + "&longitude=" + CONFIG.lon
     + "&current=temperature_2m,weather_code"
-    + "&daily=temperature_2m_max,temperature_2m_min,weather_code"
-    + "&timezone=" + encodeURIComponent(CONFIG.tz);
+    + "&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max,precipitation_sum"
+    + "&forecast_days=6&timezone=" + encodeURIComponent(CONFIG.tz);
   try {
     const r = await fetch(url, { cache: "no-store" });
     if (!r.ok) throw new Error("weather " + r.status);
     const j = await r.json();
-    const t = Math.round(j.current.temperature_2m);
-    const desc = WMO[j.current.weather_code] || "Weather";
-    $("wTemp").textContent = t + "°";
-    $("wDesc").textContent = desc;
-    const hi = Math.round(j.daily.temperature_2m_max[0]);
-    const lo = Math.round(j.daily.temperature_2m_min[0]);
-    const dDesc = WMO[j.daily.weather_code[0]] || "";
-    $("wxToday").innerHTML =
-      '<span class="wx-hi">' + hi + '°</span>'
-      + '<span class="wx-lo">' + lo + '°</span>'
-      + '<span class="wx-desc">' + dDesc + '</span>';
+    const d = j.daily;
+    const cTemp = Math.round(j.current.temperature_2m);
+    const cCode = j.current.weather_code;
+    const cDesc = WMO[cCode] || "Weather";
+    const todayRain = d.precipitation_probability_max ? d.precipitation_probability_max[0] : null;
+
+    // small current block in the header
+    $("wTemp").textContent = cTemp + "°";
+    $("wDesc").textContent = cDesc;
+
+    // prominent current block in the weather panel
+    $("wxNow").innerHTML =
+      '<span class="wx-ico">' + wxSvg(wmoCat(cCode)) + '</span>'
+      + '<span class="wx-now-temp">' + cTemp + '°</span>'
+      + '<span class="wx-now-main"><span class="wx-now-text">' + cDesc + '</span>'
+      + (todayRain != null && todayRain > 0 ? '<span class="wx-now-rain">Rain ' + Math.round(todayRain) + '%</span>' : '')
+      + '</span>';
+
+    // multi-day forecast rows
+    const n = Math.min(6, d.time.length);
+    let rows = "";
+    for (let i = 0; i < n; i++) {
+      const prob = d.precipitation_probability_max ? d.precipitation_probability_max[i] : null;
+      const sum = d.precipitation_sum ? d.precipitation_sum[i] : 0;
+      const wet = (prob != null && prob > 0) || (sum != null && sum >= 0.1);
+      const hi = Math.round(d.temperature_2m_max[i]);
+      const lo = Math.round(d.temperature_2m_min[i]);
+      rows += "<li>"
+        + '<span class="d-day">' + dayLabel(i, d.time[i]) + "</span>"
+        + '<span class="d-ico">' + wxSvg(wmoCat(d.weather_code[i])) + "</span>"
+        + '<span class="d-rain">' + (wet && prob != null ? Math.round(prob) + "%" : '<span class="d-blank">&mdash;</span>') + "</span>"
+        + '<span class="d-mm">' + (wet ? mmFmt(sum) : '<span class="d-blank">&nbsp;</span>') + "</span>"
+        + '<span class="d-temp">' + hi + "° <span class=\"lo\">" + lo + "°</span></span>"
+        + "</li>";
+    }
+    $("wxDays").innerHTML = rows;
     setStatus("Updated " + pad(new Date().getHours()) + ":" + pad(new Date().getMinutes()));
   } catch (e) {
     $("wDesc").textContent = "Weather offline";
@@ -234,21 +296,26 @@ function shortLink(url) {
   catch (e) { return ""; }
 }
 
-/* ---------------- countdowns ---------------- */
+/* ---------------- coming up (all upcoming events after today) ---------------- */
 function renderCountdowns(events) {
   const now = new Date();
+  const tomorrow0 = new Date(startOfDay(now)); tomorrow0.setDate(tomorrow0.getDate() + 1);
   const upcoming = events
-    .filter((e) => e.start >= startOfDay(now) && CONFIG.competitionRe.test(e.title))
+    .filter((e) => e.start >= tomorrow0)
     .sort((a, b) => a.start - b.start)
-    .slice(0, 3);
+    .slice(0, 6);
   const ul = $("countdowns");
   if (!upcoming.length) { ul.innerHTML = '<li class="muted">Nothing coming up</li>'; return; }
   ul.innerHTML = upcoming.map((e) => {
     const d = daysBetween(now, e.start);
-    const when = d <= 0 ? "Today" : d === 1 ? "Tomorrow" : "in " + d + " days";
+    let when;
+    if (d === 1) when = "Tomorrow";
+    else if (d < 7) when = e.start.toLocaleDateString("en-GB", { weekday: "long" });
+    else when = e.start.toLocaleDateString("en-GB", { weekday: "short", day: "numeric", month: "short" });
+    const time = e.allDay ? "" : " " + pad(e.start.getHours()) + ":" + pad(e.start.getMinutes());
     const soon = d <= 2 ? " soon" : "";
     return "<li>" + '<span class="cd-title">' + escapeHtml(e.title) + "</span>"
-      + '<span class="cd-when' + soon + '">' + when + "</span></li>";
+      + '<span class="cd-when' + soon + '">' + when + escapeHtml(time) + "</span></li>";
   }).join("");
 }
 

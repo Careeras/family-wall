@@ -65,7 +65,8 @@ body {
   grid-template-areas:
     "agenda agenda"
     "dinner dinner"
-    "coming wx";
+    "coming coming"
+    "wx wx";
   gap: 22px;
 }
 .agenda { grid-area: agenda; }
@@ -138,11 +139,35 @@ ul { list-style: none; margin: 0; padding: 0; }
 .cd-when { font-weight: 700; color: var(--accent); white-space: nowrap; }
 .cd-when.soon { color: var(--warm); }
 
-/* ---- weather detail ---- */
-.wx-today { display: flex; align-items: center; gap: 22px; font-size: 24px; }
-.wx-hi { font-weight: 700; }
-.wx-lo { color: var(--muted); font-weight: 700; }
-.wx-desc { color: var(--ink2); }
+/* ---- weather panel ---- */
+.wx-now {
+  display: flex; align-items: center; gap: 20px;
+  padding-bottom: 18px; margin-bottom: 8px;
+  border-bottom: 1px solid var(--line);
+}
+.wx-now .wx-ico svg { width: 72px; height: 72px; display: block; }
+.wx-now .wx-now-temp { font-size: 58px; font-weight: 700; letter-spacing: -1px; }
+.wx-now .wx-now-text { font-size: 24px; font-weight: 600; }
+.wx-now .wx-now-rain { font-size: 20px; color: var(--accent); font-weight: 700; }
+.wx-now .wx-now-main { display: flex; flex-direction: column; gap: 2px; }
+
+.wx-days li {
+  display: grid;
+  grid-template-columns: 96px 56px 78px 92px 1fr;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 0;
+  border-top: 1px solid var(--line);
+  font-size: 24px;
+}
+.wx-days li:first-child { border-top: 0; }
+.wx-days .d-day { font-weight: 700; }
+.wx-days .d-ico svg { width: 44px; height: 44px; display: block; }
+.wx-days .d-rain { color: var(--accent); font-weight: 700; font-variant-numeric: tabular-nums; }
+.wx-days .d-mm { color: var(--ink2); font-variant-numeric: tabular-nums; }
+.wx-days .d-temp { text-align: right; font-weight: 700; font-variant-numeric: tabular-nums; }
+.wx-days .d-temp .lo { color: var(--muted); }
+.wx-days .d-blank { color: var(--muted); }
 
 /* ---- footer ---- */
 .foot {
