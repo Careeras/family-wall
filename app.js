@@ -49,14 +49,15 @@ function mockEvents() {
   ];
 }
 
-// --- Live Google Calendar via Google Identity Services (browser token flow) ---
-let _tokenClient = null;
+// --- Live Google Calendar via OAuth 2.0 redirect flow (works without popups) ---
+const AUTH_ENDPOINT = "https://accounts.google.com/o/oauth2/v2/auth";
+const REDIRECT_URI = "https://careeras.github.io/family-wall/oauth.html";
+
 let _accessToken = null;
 let _tokenExpiry = 0;
-let _pending = null;   // {resolve, reject}
 let _cacheLoaded = false;
+let _silent = null;   // {resolve, reject, ifr, timer} while a silent refresh is in flight
 
-// Cache the access token across reloads so one sign-in keeps the calendar for the session.
 function _loadCachedToken() {
   if (_cacheLoaded) return;
   _cacheLoaded = true;
@@ -66,53 +67,72 @@ function _loadCachedToken() {
   } catch (e) { /* storage may be blocked */ }
 }
 function _saveToken() {
-  try { localStorage.setItem("fw_tok", JSON.stringify({ t: _accessToken, e: _tokenExpiry })); } catch (e) { /* ignore */ }
+  try {
+    localStorage.setItem("fw_tok", JSON.stringify({ t: _accessToken, e: _tokenExpiry }));
+    localStorage.setItem("fw_granted", "1");
+  } catch (e) { /* ignore */ }
+}
+function _granted() {
+  try { return localStorage.getItem("fw_granted") === "1"; } catch (e) { return false; }
 }
 
-function _initTokenClient() {
-  if (_tokenClient) return true;
-  if (!(window.google && google.accounts && google.accounts.oauth2)) return false;
-  _tokenClient = google.accounts.oauth2.initTokenClient({
-    client_id: CONFIG.googleClientId,
-    scope: CONFIG.calendarScope,
-    callback: (resp) => {
-      const p = _pending; _pending = null;
-      if (!p) return;
-      if (resp && resp.access_token) {
-        _accessToken = resp.access_token;
-        _tokenExpiry = Date.now() + ((resp.expires_in || 3600) - 60) * 1000;
-        _saveToken();
-        p.resolve(_accessToken);
-      } else {
-        p.reject(new Error(resp && resp.error ? resp.error : "no token"));
-      }
-    },
-    error_callback: (err) => {
-      const p = _pending; _pending = null;
-      if (p) p.reject(new Error(err && err.type ? err.type : "oauth error"));
-    }
-  });
-  return true;
+function _authUrl(prompt) {
+  const p = new URLSearchParams();
+  p.set("client_id", CONFIG.googleClientId);
+  p.set("redirect_uri", REDIRECT_URI);
+  p.set("response_type", "token");
+  p.set("scope", CONFIG.calendarScope);
+  p.set("include_granted_scopes", "true");
+  if (prompt) p.set("prompt", prompt);
+  return AUTH_ENDPOINT + "?" + p.toString();
 }
 
-// interactive=false -> silent renewal (no popup, needs an existing grant + live session)
-// interactive=true  -> show the Google consent/account chooser (must be from a tap)
-function _getToken(interactive) {
+// Silent refresh via a hidden iframe (no page reload). Needs 3rd-party cookies + a live Google session.
+function _silentRenew() {
   return new Promise((resolve, reject) => {
-    _loadCachedToken();
-    if (_accessToken && Date.now() < _tokenExpiry) { resolve(_accessToken); return; }
-    if (!_initTokenClient()) { reject(new Error("GIS not loaded")); return; }
-    _pending = { resolve, reject };
-    try {
-      _tokenClient.requestAccessToken({ prompt: interactive ? "consent" : "none" });
-    } catch (e) {
-      _pending = null; reject(e);
-    }
+    if (_silent) { reject(new Error("busy")); return; }
+    const ifr = document.createElement("iframe");
+    ifr.style.display = "none";
+    ifr.setAttribute("aria-hidden", "true");
+    const timer = setTimeout(() => _endSilent(null, "timeout"), 12000);
+    _silent = { resolve, reject, ifr, timer };
+    ifr.src = _authUrl("none");
+    document.body.appendChild(ifr);
   });
+}
+function _endSilent(token, err) {
+  if (!_silent) return;
+  const s = _silent; _silent = null;
+  clearTimeout(s.timer);
+  try { s.ifr.remove(); } catch (e) {}
+  if (token) s.resolve(token); else s.reject(new Error(err || "silent failed"));
+}
+
+window.addEventListener("message", (ev) => {
+  if (ev.origin !== location.origin) return;
+  const d = ev.data;
+  if (!d || typeof d.fw_oauth !== "string") return;
+  const h = new URLSearchParams(d.fw_oauth);
+  const t = h.get("access_token");
+  if (t) {
+    _accessToken = t;
+    _tokenExpiry = Date.now() + ((parseInt(h.get("expires_in"), 10) || 3600) - 60) * 1000;
+    _saveToken();
+    _endSilent(t);
+  } else {
+    _endSilent(null, h.get("error") || "no token");
+  }
+});
+
+async function _ensureToken() {
+  _loadCachedToken();
+  if (_accessToken && Date.now() < _tokenExpiry) return _accessToken;
+  if (_granted()) return await _silentRenew();   // may reject -> caller shows Sign in
+  throw new Error("no token");
 }
 
 async function loadGoogleCalendar() {
-  const token = await _getToken(false);   // silent; the Sign in button does the interactive one
+  const token = await _ensureToken();
   const now = new Date();
   const max = new Date(now); max.setDate(max.getDate() + CONFIG.calendarDaysAhead);
   const url = "https://www.googleapis.com/calendar/v3/calendars/primary/events"
@@ -132,9 +152,10 @@ async function loadGoogleCalendar() {
   });
 }
 
+// Interactive sign-in: a full-page redirect to Google (no popup needed).
 function signInInteractive() {
   setStatus("Signing in...");
-  _getToken(true).then(() => refreshEvents()).catch(() => setStatus("Sign-in failed, tap to retry"));
+  location.href = _authUrl("");
 }
 
 /* ---------------- utilities ---------------- */

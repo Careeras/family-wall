@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Family Wall sign-in</title>
+</head>
+<body>
+<script>
+/* OAuth redirect target. Google sends the access token here in the URL fragment.
+   - In a hidden iframe (silent renewal): post the fragment up to the wall.
+   - Top level (after an interactive sign-in): stash the token and go back to the wall. */
+(function () {
+  "use strict";
+  var h = location.hash ? location.hash.substring(1) : "";
+  var inFrame = (window.parent && window.parent !== window);
+  if (inFrame) {
+    try { window.parent.postMessage({ fw_oauth: h }, location.origin); } catch (e) {}
+    return;
+  }
+  try {
+    var p = new URLSearchParams(h);
+    var t = p.get("access_token");
+    if (t) {
+      var e = Date.now() + ((parseInt(p.get("expires_in"), 10) || 3600) - 60) * 1000;
+      localStorage.setItem("fw_tok", JSON.stringify({ t: t, e: e }));
+      localStorage.setItem("fw_granted", "1");
+    }
+  } catch (e) {}
+  location.replace("./");
+})();
+</script>
+Signing in...
+</body>
+</html>
