@@ -245,7 +245,8 @@ async function loadWeather() {
     setStatus("Updated " + pad(new Date().getHours()) + ":" + pad(new Date().getMinutes()));
   } catch (e) {
     $("wDesc").textContent = "Weather offline";
-    setStatus("Weather error");
+    $("wxNow").innerHTML = '<span class="muted">Weather unavailable</span>';
+    setStatus("Weather: " + (e && e.message ? String(e.message).slice(0, 70) : "error"));
   }
 }
 
