@@ -1,0 +1,144 @@
+<!doctype html>
+<html lang="en" data-theme="periwinkle">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="light">
+<script>/* household theme, chosen on the tablet */ try { var t = localStorage.getItem("fw_theme"); if (t && /^[a-z]+$/.test(t)) document.documentElement.setAttribute("data-theme", t); } catch (e) {}</script>
+<title>Family Wall</title>
+<link rel="stylesheet" href="style.css?v=48">
+</head>
+<body>
+<div class="wall" id="wall">
+
+  <div class="col col-a">
+  <section class="hero" aria-label="Today">
+    <div class="hero-clock" id="heroClock">
+      <div class="hero-line" id="heroLine">
+        <span class="clock" id="clock">--:--</span>
+        <span class="date" id="date">&nbsp;</span>
+      </div>
+    </div>
+    <div class="hero-quote" id="heroQuote">
+      <blockquote class="q" id="quote">&nbsp;</blockquote>
+      <div class="hero-meta">
+        <span class="q-author" id="qAuthor"></span>
+      </div>
+    </div>
+  </section>
+
+  <section class="card plan fold" id="plan" aria-labelledby="planH">
+    <button class="fold-toggle" id="planToggle" type="button" aria-expanded="true">
+      <svg class="h-ico" viewBox="0 0 24 24" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 18h16"/><path d="M7 18a5 5 0 0 1 10 0"/><path d="M12 3v4M9.5 5.5 12 3l2.5 2.5"/><path d="M4.5 13.5l1.4 1M19.5 13.5l-1.4 1"/></g></svg>
+      <h2 id="planH" class="card-h">Tomorrow morning</h2>
+      <svg class="chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </button>
+    <div class="fold-body">
+      <p class="plan-sub" id="planSub">Get ready for the day</p>
+      <p class="plan-traffic" id="planTraffic" hidden></p>
+      <ul class="plan-list" id="planList"></ul>
+    </div>
+  </section>
+  <section class="card wx fold" id="wxCard" aria-labelledby="wxH">
+    <div class="fold-head">
+      <button class="fold-toggle" id="wxToggle" type="button" aria-expanded="true">
+        <svg class="h-ico" viewBox="0 0 24 24" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 18a4.5 4.5 0 0 1-.7-8.95A6 6 0 0 1 17.8 10.5 3.75 3.75 0 0 1 17.5 18z"/></g></svg>
+        <h2 id="wxH" class="card-h">Weather</h2>
+        <span class="hint wx-line" id="wxLine"></span>
+        <svg class="chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </button>
+    </div>
+    <div class="fold-body">
+      <ol class="wx-bar" id="wxBar" aria-label="Now, later today, tomorrow and the day after"><li class="muted">Weather...</li></ol>
+    </div>
+  </section>
+
+  </div>
+
+  <div class="col col-b">
+  <section class="card agenda fold" id="agendaCard" aria-labelledby="agH">
+    <div class="fold-head">
+      <button class="fold-toggle" id="agToggle" type="button" aria-expanded="true">
+        <svg class="h-ico" viewBox="0 0 24 24" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="5" width="17" height="15.5" rx="2.5"/><path d="M3.5 10h17M8 3v4M16 3v4"/></g></svg>
+        <h2 id="agH" class="card-h">Family agenda</h2>
+        <svg class="chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </button>
+      <button id="signin" class="signin" type="button" hidden>Sign in</button>
+      <a class="card-link" id="calLink" href="#">Full calendar
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h13M13 6l6 6-6 6" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </a>
+    </div>
+    <div class="fold-body">
+      <div class="ag" id="agenda"><p class="muted">Loading...</p></div>
+    </div>
+  </section>
+
+  <section class="card shop fold" id="shop" aria-labelledby="shopH">
+    <button class="fold-toggle" id="shopToggle" type="button" aria-expanded="true">
+      <svg class="h-ico" viewBox="0 0 24 24" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9h16l-1.6 9.2a2 2 0 0 1-2 1.8H7.6a2 2 0 0 1-2-1.8z"/><path d="M8.5 9 11 4M15.5 9 13 4M9 13v3M12 13v3M15 13v3"/></g></svg>
+      <h2 id="shopH" class="card-h">Shopping list</h2>
+      <svg class="chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </button>
+    <div class="fold-body">
+      <a class="shop-card" href="#" data-keep>
+        <span class="shop-text">
+          <span class="shop-title">Open list</span>
+          <span class="shop-sub">Tick things off in Keep. Press Back to return to the wall.</span>
+        </span>
+        <svg class="shop-go" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h13M13 6l6 6-6 6" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </a>
+    </div>
+  </section>
+
+  </div>
+
+  <section class="card dinner fold" id="dinner" aria-labelledby="dinnerH">
+    <button class="fold-toggle" id="dinnerToggle" type="button" aria-expanded="true">
+      <svg class="h-ico" viewBox="0 0 24 24" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3v7a2 2 0 0 0 4 0V3M8 10v11"/><path d="M17 21V3c-2 1.5-3 4-3 7h3"/></g></svg>
+      <h2 id="dinnerH" class="card-h">Dinner ideas</h2>
+      <span class="hint" id="dinnerHint"></span>
+      <svg class="chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </button>
+    <div class="fold-body">
+      <ul class="meals" id="meals"><li class="muted">Loading...</li></ul>
+    </div>
+  </section>
+
+  <section class="card lunch fold" id="lunch" aria-labelledby="lunchH">
+    <button class="fold-toggle" id="lunchToggle" type="button" aria-expanded="true">
+      <svg class="h-ico" viewBox="0 0 24 24" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="7" width="18" height="13" rx="3"/><path d="M9 7V5.5A1.5 1.5 0 0 1 10.5 4h3A1.5 1.5 0 0 1 15 5.5V7M3 12h18M11 12v8"/></g></svg>
+      <h2 id="lunchH" class="card-h">Lunch boxes</h2>
+      <span class="hint" id="lunchHint">Madpakker</span>
+      <svg class="chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </button>
+    <div class="fold-body">
+      <ul class="meals lunches" id="lunches"><li class="muted">Loading...</li></ul>
+    </div>
+  </section>
+
+  <section class="card holcard fold" id="holCard" aria-labelledby="holH">
+    <button class="fold-toggle" id="holToggle" type="button" aria-expanded="true">
+      <svg class="h-ico" viewBox="0 0 24 24" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 21V4M5 4h11l-2 3.5L16 11H5"/></g></svg>
+      <h2 id="holH" class="card-h">Upcoming holidays</h2>
+      <svg class="chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </button>
+    <div class="fold-body">
+      <ul class="hol-list" id="holidays"></ul>
+    </div>
+  </section>
+
+  <footer class="foot">
+    <span>Family Hub</span>
+    <span aria-hidden="true">&middot;</span>
+    <span id="status"></span>
+  </footer>
+
+</div>
+
+<noscript>This wall needs JavaScript.</noscript>
+<script src="quotes.js?v=48"></script>
+<script src="menu.js?v=48"></script>
+<script src="lunch.js?v=48"></script>
+<script src="app.js?v=48"></script>
+</body>
+</html>

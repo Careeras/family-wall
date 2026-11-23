@@ -1,0 +1,449 @@
+/* Family wall - light kitchen look, a compact scrolling column of cards.
+   The Tab A8 lays this out at 800 x 1280 CSS px portrait, 1280 x 800 landscape (DPR 1.5).
+   Order: cream hero (time + date line, quote, on this day) > weather > plan (tomorrow morning / next up)
+   > agenda > shopping > birthdays > dinner > lunch boxes. Every card below the weather folds to its heading. */
+:root {
+  color-scheme: light;
+  --bg: #eef1f5;
+  --bg2: #ffffff;
+  --ink: #15202b;
+  --ink2: #4b5a69;
+  --muted: #626e7b;
+  --line: #e2e8f0;
+  --accent: #1f6feb;
+  --accent-ink: #1c5fc9;
+  --cream-hero: #fbf4e4;
+  --cream-hero-2: #f6ead0;
+  --gold: #b58a32;
+  --sun: #d9700a;
+  --quote: #b9560c;        /* the daily quote: a deeper orange than the date so 18 px regular text stays readable */          /* the date in the hero: sun orange, dark enough for large text on cream */
+  --warm: #c8641c;
+  --warm-ring: #e8873b;
+  --warm-soft: #fcefe2;
+  --cream: #fbf5e4;        /* plan card */
+  --hero-line: #efe0bd;
+  --plan-ink: #7a6420;
+  --accent-soft: #e6efff;
+  --soft: #f3f6fa;
+  --shop-bg: #fffbeb;
+  --shop-line: #f3e2a8;
+  --good: #1a8a4c;
+  --p0: #3b82c4;           /* person colours, assigned from the device birthday list order */
+  --p1: #d39a5c;
+  --p2: #8b5cf6;
+  --p3: #d9668c;
+  --both: #6d73d9;
+  --other: #b9c2cc;
+  --shadow: 0 1px 2px rgba(20, 35, 55, 0.05), 0 5px 14px rgba(20, 35, 55, 0.06);
+  --radius: 20px;
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* ---- colour themes: <html data-theme="..."> (default = "linen", the :root values above) ---- */
+:root[data-theme="sage"] {
+  --bg: #edf1ea; --ink: #1d2a22; --ink2: #4a5a50; --muted: #5f6d64; --line: #dfe6dc;
+  --accent: #2f6b4f; --accent-ink: #2a5f46; --accent-soft: #e3efe7; --soft: #f1f5ef;
+  --cream-hero: #f6f8f1; --cream-hero-2: #e7efe1; --hero-line: #d6e2cf;
+  --gold: #8a7a3a; --sun: #c2571d; --cream: #f3f6ec; --plan-ink: #4d6b3a;
+  --shop-bg: #f7faf2; --shop-line: #d9e6cc; --p0: #3f7fb5; --p1: #c9865a; --other: #b8c4bb;
+}
+:root[data-theme="harbour"] {
+  --bg: #ebf0f6; --ink: #142235; --ink2: #475a70; --muted: #5d6b7c; --line: #dce4ee;
+  --accent: #2357a8; --accent-ink: #1f4f99; --accent-soft: #e2ebf8; --soft: #eef3f9;
+  --cream-hero: #f4f8fc; --cream-hero-2: #e2ecf7; --hero-line: #d3e0ef;
+  --gold: #a87a2a; --sun: #e0701a; --cream: #fff6e8; --plan-ink: #8a5a1c;
+  --shop-bg: #fff9ec; --shop-line: #f1dfb6; --p0: #2f78c4; --p1: #e0913f; --other: #b9c4d0;
+}
+/* One-accent themes (v48, 2026-11-23). Each uses a single hue: a light tone for the date, icons and highlights,
+   a deeper shade of the same hue for small text (quote, labels), and a pale tint for tiles and the shopping button.
+   Neutrals are shared. The first five are strong tones, the last five soft ones. The household picks one on the
+   tablet: localStorage "fw_theme" = "<name>" (read in index.html before paint); default is <html data-theme>.
+   Alex's wall: periwinkle. The older multi-colour themes below are kept for reference. */
+:root[data-theme="ocean"] {   /* Ocean */
+  --bg: #edf0f5; --ink: #151c2c; --ink2: #4a5468; --muted: #5f6879; --line: #e0e4ec;
+  --accent: #2563a8; --accent-ink: #2563a8; --accent-soft: rgba(232,240,250,0.85); --soft: #f3f5f9;
+  --cream-hero: #f7f8fb; --cream-hero-2: #eef1f6; --hero-line: #e0e4ec;
+  --gold: #2563a8; --sun: #2563a8; --quote: #2563a8; --cream: #ffffff; --plan-ink: #2563a8;
+  --warm-ring: #2563a8; --good: #2563a8; --shop-bg: rgba(232,240,250,0.85); --shop-line: transparent;
+  --p0: #2563a8; --p1: #9aa6b8; --other: #c5cbd6; --tint: rgba(232,240,250,0.85);
+}
+:root[data-theme="fern"] {   /* Sage */
+  --bg: #edf0f5; --ink: #151c2c; --ink2: #4a5468; --muted: #5f6879; --line: #e0e4ec;
+  --accent: #3d7a57; --accent-ink: #3d7a57; --accent-soft: rgba(233,243,237,0.85); --soft: #f3f5f9;
+  --cream-hero: #f7f8fb; --cream-hero-2: #eef1f6; --hero-line: #e0e4ec;
+  --gold: #3d7a57; --sun: #3d7a57; --quote: #3d7a57; --cream: #ffffff; --plan-ink: #3d7a57;
+  --warm-ring: #3d7a57; --good: #3d7a57; --shop-bg: rgba(233,243,237,0.85); --shop-line: transparent;
+  --p0: #3d7a57; --p1: #9aa6b8; --other: #c5cbd6; --tint: rgba(233,243,237,0.85);
+}
+:root[data-theme="violet"] {   /* Lavender */
+  --bg: #edf0f5; --ink: #151c2c; --ink2: #4a5468; --muted: #5f6879; --line: #e0e4ec;
+  --accent: #5f52b8; --accent-ink: #5f52b8; --accent-soft: rgba(238,236,250,0.85); --soft: #f3f5f9;
+  --cream-hero: #f7f8fb; --cream-hero-2: #eef1f6; --hero-line: #e0e4ec;
+  --gold: #5f52b8; --sun: #5f52b8; --quote: #5f52b8; --cream: #ffffff; --plan-ink: #5f52b8;
+  --warm-ring: #5f52b8; --good: #5f52b8; --shop-bg: rgba(238,236,250,0.85); --shop-line: transparent;
+  --p0: #5f52b8; --p1: #9aa6b8; --other: #c5cbd6; --tint: rgba(238,236,250,0.85);
+}
+:root[data-theme="rose"] {   /* Rose */
+  --bg: #edf0f5; --ink: #151c2c; --ink2: #4a5468; --muted: #5f6879; --line: #e0e4ec;
+  --accent: #b0436f; --accent-ink: #b0436f; --accent-soft: rgba(250,236,242,0.85); --soft: #f3f5f9;
+  --cream-hero: #f7f8fb; --cream-hero-2: #eef1f6; --hero-line: #e0e4ec;
+  --gold: #b0436f; --sun: #b0436f; --quote: #b0436f; --cream: #ffffff; --plan-ink: #b0436f;
+  --warm-ring: #b0436f; --good: #b0436f; --shop-bg: rgba(250,236,242,0.85); --shop-line: transparent;
+  --p0: #b0436f; --p1: #9aa6b8; --other: #c5cbd6; --tint: rgba(250,236,242,0.85);
+}
+:root[data-theme="graphite"] {   /* Graphite */
+  --bg: #edf0f5; --ink: #151c2c; --ink2: #4a5468; --muted: #5f6879; --line: #e0e4ec;
+  --accent: #334155; --accent-ink: #334155; --accent-soft: rgba(241,243,246,0.85); --soft: #f3f5f9;
+  --cream-hero: #f7f8fb; --cream-hero-2: #eef1f6; --hero-line: #e0e4ec;
+  --gold: #334155; --sun: #334155; --quote: #334155; --cream: #ffffff; --plan-ink: #334155;
+  --warm-ring: #334155; --good: #334155; --shop-bg: rgba(241,243,246,0.85); --shop-line: transparent;
+  --p0: #334155; --p1: #9aa6b8; --other: #c5cbd6; --tint: rgba(241,243,246,0.85);
+}
+:root[data-theme="sky"] {   /* Sky blue */
+  --bg: #edf0f5; --ink: #151c2c; --ink2: #4a5468; --muted: #5f6879; --line: #e0e4ec;
+  --accent: #5aaee8; --accent-ink: #2f7fbf; --accent-soft: rgba(232,244,253,0.85); --soft: #f3f5f9;
+  --cream-hero: #f7f8fb; --cream-hero-2: #eef1f6; --hero-line: #e0e4ec;
+  --gold: #5aaee8; --sun: #5aaee8; --quote: #2f7fbf; --cream: #ffffff; --plan-ink: #2f7fbf;
+  --warm-ring: #5aaee8; --good: #2f7fbf; --shop-bg: rgba(232,244,253,0.85); --shop-line: transparent;
+  --p0: #2f7fbf; --p1: #5aaee8; --other: #c5cbd6; --tint: rgba(232,244,253,0.85);
+}
+:root[data-theme="mint"] {   /* Baby green */
+  --bg: #edf0f5; --ink: #151c2c; --ink2: #4a5468; --muted: #5f6879; --line: #e0e4ec;
+  --accent: #5cc49a; --accent-ink: #2f8f68; --accent-soft: rgba(231,247,240,0.85); --soft: #f3f5f9;
+  --cream-hero: #f7f8fb; --cream-hero-2: #eef1f6; --hero-line: #e0e4ec;
+  --gold: #5cc49a; --sun: #5cc49a; --quote: #2f8f68; --cream: #ffffff; --plan-ink: #2f8f68;
+  --warm-ring: #5cc49a; --good: #2f8f68; --shop-bg: rgba(231,247,240,0.85); --shop-line: transparent;
+  --p0: #2f8f68; --p1: #5cc49a; --other: #c5cbd6; --tint: rgba(231,247,240,0.85);
+}
+:root[data-theme="leaf"] {   /* Light green */
+  --bg: #edf0f5; --ink: #151c2c; --ink2: #4a5468; --muted: #5f6879; --line: #e0e4ec;
+  --accent: #8cc46a; --accent-ink: #4f8a32; --accent-soft: rgba(239,247,232,0.85); --soft: #f3f5f9;
+  --cream-hero: #f7f8fb; --cream-hero-2: #eef1f6; --hero-line: #e0e4ec;
+  --gold: #8cc46a; --sun: #8cc46a; --quote: #4f8a32; --cream: #ffffff; --plan-ink: #4f8a32;
+  --warm-ring: #8cc46a; --good: #4f8a32; --shop-bg: rgba(239,247,232,0.85); --shop-line: transparent;
+  --p0: #4f8a32; --p1: #8cc46a; --other: #c5cbd6; --tint: rgba(239,247,232,0.85);
+}
+:root[data-theme="lilac"] {   /* Baby violet */
+  --bg: #edf0f5; --ink: #151c2c; --ink2: #4a5468; --muted: #5f6879; --line: #e0e4ec;
+  --accent: #b39ddb; --accent-ink: #7a5fc0; --accent-soft: rgba(243,239,251,0.85); --soft: #f3f5f9;
+  --cream-hero: #f7f8fb; --cream-hero-2: #eef1f6; --hero-line: #e0e4ec;
+  --gold: #b39ddb; --sun: #b39ddb; --quote: #7a5fc0; --cream: #ffffff; --plan-ink: #7a5fc0;
+  --warm-ring: #b39ddb; --good: #7a5fc0; --shop-bg: rgba(243,239,251,0.85); --shop-line: transparent;
+  --p0: #7a5fc0; --p1: #b39ddb; --other: #c5cbd6; --tint: rgba(243,239,251,0.85);
+}
+:root[data-theme="periwinkle"] {   /* Light violet */
+  --bg: #edf0f5; --ink: #151c2c; --ink2: #4a5468; --muted: #5f6879; --line: #e0e4ec;
+  --accent: #8f9cf0; --accent-ink: #5b68cf; --accent-soft: rgba(238,240,253,0.85); --soft: #f3f5f9;
+  --cream-hero: #f7f8fb; --cream-hero-2: #eef1f6; --hero-line: #e0e4ec;
+  --gold: #8f9cf0; --sun: #8f9cf0; --quote: #5b68cf; --cream: #ffffff; --plan-ink: #5b68cf;
+  --warm-ring: #8f9cf0; --good: #5b68cf; --shop-bg: rgba(238,240,253,0.85); --shop-line: transparent;
+  --p0: #5b68cf; --p1: #8f9cf0; --other: #c5cbd6; --tint: rgba(238,240,253,0.85);
+}
+:root[data-theme="ocean"] .tile, :root[data-theme="fern"] .tile, :root[data-theme="violet"] .tile, :root[data-theme="rose"] .tile, :root[data-theme="graphite"] .tile, :root[data-theme="sky"] .tile, :root[data-theme="mint"] .tile, :root[data-theme="leaf"] .tile, :root[data-theme="lilac"] .tile, :root[data-theme="periwinkle"] .tile { background: var(--tint); }
+:root[data-theme="ocean"] .shop-card, :root[data-theme="fern"] .shop-card, :root[data-theme="violet"] .shop-card, :root[data-theme="rose"] .shop-card, :root[data-theme="graphite"] .shop-card, :root[data-theme="sky"] .shop-card, :root[data-theme="mint"] .shop-card, :root[data-theme="leaf"] .shop-card, :root[data-theme="lilac"] .shop-card, :root[data-theme="periwinkle"] .shop-card { background: var(--tint); border-color: transparent; }
+:root[data-theme="ocean"] body.has-photo .plan, :root[data-theme="fern"] body.has-photo .plan, :root[data-theme="violet"] body.has-photo .plan, :root[data-theme="rose"] body.has-photo .plan, :root[data-theme="graphite"] body.has-photo .plan, :root[data-theme="sky"] body.has-photo .plan, :root[data-theme="mint"] body.has-photo .plan, :root[data-theme="leaf"] body.has-photo .plan, :root[data-theme="lilac"] body.has-photo .plan, :root[data-theme="periwinkle"] body.has-photo .plan { background: rgba(255, 255, 255, 0.84); }
+
+:root[data-theme="terracotta"] {
+  --bg: #f4eee8; --ink: #2a1d17; --ink2: #5c4a40; --muted: #6e5d53; --line: #eadfd5;
+  --accent: #b4532a; --accent-ink: #9c4523; --accent-soft: #f6e4d9; --soft: #f8f1ea;
+  --cream-hero: #fbf3ea; --cream-hero-2: #f1dcc7; --hero-line: #e8cfb6;
+  --gold: #a0703a; --sun: #b4532a; --cream: #fbf0e3; --plan-ink: #8a4a24;
+  --shop-bg: #fdf6ec; --shop-line: #ecd6bb; --p0: #4a7fa6; --p1: #c8763f; --other: #c4b6aa;
+}
+:root[data-theme="lavender"] {
+  --bg: #f2eff7; --ink: #211b33; --ink2: #554c6b; --muted: #685f7d; --line: #e4dff0;
+  --accent: #6a4fb3; --accent-ink: #5c43a0; --accent-soft: #ece6f8; --soft: #f5f2fa;
+  --cream-hero: #f8f4fc; --cream-hero-2: #ece2f6; --hero-line: #e0d4ef;
+  --gold: #a5764a; --sun: #e8744f; --cream: #fff3ec; --plan-ink: #9a4f34;
+  --shop-bg: #fff7f1; --shop-line: #f2dccd; --p0: #4f7fd0; --p1: #e58a5e; --other: #c2bad2;
+}
+
+* { box-sizing: border-box; }
+html, body { margin: 0; }
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: "Segoe UI", system-ui, -apple-system, Roboto, Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  font-size: 17px;
+  line-height: 1.32;
+  -webkit-tap-highlight-color: transparent;
+  overscroll-behavior-y: contain;
+}
+::selection { background: var(--warm-soft); color: var(--ink); }
+button { font: inherit; color: inherit; }
+a { color: inherit; }
+:focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; border-radius: 10px; }
+ul, ol { list-style: none; margin: 0; padding: 0; }
+.muted { color: var(--muted); }
+
+/* Portrait: one column; the two column groups dissolve and `order` puts dinner and lunch last.
+   Landscape: two columns (hero, weather, plan | agenda, shopping, birthdays), dinner and lunch full width below. */
+.wall {
+  max-width: 800px; margin: 0 auto;
+  display: flex; flex-direction: column; gap: 12px;
+  padding: 12px 12px 8px;
+}
+.col { display: contents; }
+.wall > .dinner { order: 1; }
+.wall > .lunch { order: 2; }
+.wall > .holcard { order: 3; }
+.wall > .foot { order: 4; }
+
+@media (orientation: landscape) and (min-width: 1000px) {
+  .wall {
+    max-width: 1320px;
+    display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    align-items: start; gap: 12px 14px;
+  }
+  .col { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+  .wall > .dinner, .wall > .lunch, .wall > .holcard, .wall > .foot { grid-column: 1 / -1; }
+  .meals { grid-template-rows: 190px repeat(2, 140px); }
+  .meal { grid-column: span 2; }
+  .meal.is-pick { grid-column: span 4; }
+}
+
+/* ---- shared card ---- */
+.card {
+  background: var(--bg2);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 14px 18px 16px;
+}
+.card-head { display: flex; align-items: center; gap: 12px; margin-bottom: 10px; }
+.card-h {
+  flex: 1; margin: 0;
+  font-size: 18px; font-weight: 800; letter-spacing: 0.8px; text-transform: uppercase; color: var(--ink);
+}
+.h-ico { width: 24px; height: 24px; flex: none; color: var(--gold); }
+.chip {
+  font-size: 12px; font-weight: 800; letter-spacing: 0.8px; text-transform: uppercase;
+  color: var(--accent-ink); background: var(--accent-soft); border-radius: 999px; padding: 3px 10px;
+}
+.chip:empty { display: none; }
+.card-link {
+  display: inline-flex; align-items: center; gap: 6px; flex: none;
+  font-size: 15px; font-weight: 600; color: var(--accent-ink); text-decoration: none;
+}
+.card-link svg { width: 18px; height: 18px; }
+.card-link[hidden] { display: none; }
+.signin {
+  font-size: 15px; font-weight: 700; color: #fff; background: var(--accent);
+  border: 0; border-radius: 10px; padding: 6px 14px; flex: none;
+}
+
+/* ---- hero: one line of time + date filling the width, the quote, then on this day ---- */
+.hero {
+  position: relative; overflow: hidden;
+  background: linear-gradient(160deg, var(--cream-hero) 0%, var(--cream-hero-2) 100%);
+  color: var(--ink);
+  border: 1px solid var(--hero-line);
+  border-radius: var(--radius);
+  padding: 14px 22px 18px;
+  box-shadow: 0 5px 16px rgba(120, 90, 30, 0.09);
+}
+.hero-clock, .hero-quote { will-change: transform; }
+.hero-line {
+  display: inline-flex; align-items: baseline; gap: 0.26em;
+  white-space: nowrap; line-height: 1;
+  font-size: 120px;          /* fitHeroLine() sets the real size so the line fills the card */
+}
+.clock { font-weight: 800; letter-spacing: -0.045em; font-variant-numeric: tabular-nums; color: var(--ink); }
+.date { font-size: 0.44em; font-weight: 800; letter-spacing: -0.01em; color: var(--sun); }
+.hero-quote { margin-top: 8px; }
+.q { margin: 0; }   /* no balancing: a quote that fits stays on one line */
+.q-text { display: block; font-size: 18px; font-weight: 500; line-height: 1.3; color: var(--quote); }   /* card-heading size, orange, not bold */
+.hero-meta { margin-top: 6px; }
+.q-author { font-size: 13px; font-weight: 700; letter-spacing: 1.3px; text-transform: uppercase; color: #98a3af; }   /* light grey */
+
+/* ---- weather: one bar, Now | Later today | Tomorrow | day after; then the one-liner ---- */
+.wx-bar { display: grid; grid-template-columns: 1.15fr 1fr 1fr 1fr; }
+.wx-bar > li.muted { grid-column: 1 / -1; }
+.wb { display: flex; flex-direction: column; align-items: center; text-align: center; gap: 1px; padding: 2px 6px; min-width: 0; }
+.wb + .wb { border-left: 1px solid var(--line); }
+.wb-k { font-size: 13px; font-weight: 800; letter-spacing: 0.8px; text-transform: uppercase; color: var(--ink2); white-space: nowrap; }
+.wb-now .wb-k { color: var(--accent-ink); }
+.wb-ico svg { width: 44px; height: 44px; display: block; margin: 2px 0; }
+.wb-t { font-size: 30px; font-weight: 700; letter-spacing: -0.8px; line-height: 1.05; font-variant-numeric: tabular-nums; }
+.wb-now .wb-t { font-size: 38px; }
+.wb-t small { font-size: 17px; font-weight: 600; color: var(--muted); margin-left: 4px; letter-spacing: 0; }
+.wb-s { font-size: 14px; color: var(--ink2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
+.wb-r { margin-top: 3px; font-size: 14px; color: var(--accent-ink); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.wb-r b { font-weight: 800; }
+.wb-dry { color: var(--muted); font-weight: 600; }
+.wx-say {
+  margin: 12px 0 0; padding: 9px 14px; border-radius: 12px; background: var(--soft);
+  font-size: 16px; line-height: 1.4; color: var(--ink2); font-weight: 600;
+}
+.wx-say:empty { display: none; }
+
+/* ---- foldable cards: folded = heading only ---- */
+.fold { padding-top: 4px; padding-bottom: 4px; }
+.fold:not(.folded) { padding-bottom: 16px; }
+.fold-head { display: flex; align-items: center; gap: 12px; }
+.fold-toggle {
+  width: 100%; flex: 1; min-width: 0; display: flex; align-items: center; gap: 10px;
+  background: none; border: 0; padding: 8px 0; text-align: left; cursor: pointer; min-height: 48px;
+}
+.fold-toggle .card-h { flex: none; }
+.fold-toggle .hint { flex: 1; min-width: 0; font-size: 15px; color: var(--muted); font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.fold-toggle .wx-line { white-space: normal; font-size: 15px; font-weight: 600; color: var(--ink2); line-height: 1.3; }
+.fold-toggle .chev { margin-left: auto; }
+.chev { width: 26px; height: 26px; color: var(--ink2); transition: transform 280ms var(--ease-out); flex: none; }
+.folded .chev { transform: rotate(-90deg); }
+.folded .fold-body { display: none; }
+.folded .card-link { display: none; }
+.fold-body { padding-top: 4px; animation: rise 300ms var(--ease-out) both; }
+
+/* ---- plan: tomorrow morning in the evening, next up during the day ---- */
+.plan { background: var(--cream); box-shadow: none; }
+.plan-sub { margin: 0 0 6px; font-size: 16px; color: var(--plan-ink); font-weight: 600; }
+.plan-traffic {
+  margin: 0 0 10px; padding: 7px 12px; border-radius: 10px;
+  background: rgba(255, 255, 255, 0.6); font-size: 15px; font-weight: 600; color: var(--ink2);
+}
+.plan-traffic[hidden] { display: none; }
+/* four tiles across; more items wrap to a new row */
+.plan-list { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; }
+.plan-list > li.muted { grid-column: 1 / -1; font-size: 17px; }
+.tile {
+  display: flex; flex-direction: column; gap: 3px; min-width: 0;
+  background: rgba(255, 255, 255, 0.7); border-radius: 12px; padding: 9px 11px 10px;
+}
+.tile svg { width: 22px; height: 22px; color: var(--gold); margin-bottom: 2px; }
+.tile.wxi svg { color: var(--accent); }
+.tile.go svg { color: var(--accent-ink); }
+.t-main { font-size: 17px; font-weight: 700; line-height: 1.2; color: var(--ink); }
+.t-sub { font-size: 14px; line-height: 1.3; color: var(--ink2); }
+.tile b { font-variant-numeric: tabular-nums; }
+
+/* ---- family agenda: day groups, time | person bar | activity over place ---- */
+.ag-day + .ag-day { margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--line); }
+.ag-dh { margin: 0 0 6px; font-size: 14px; font-weight: 800; letter-spacing: 1.1px; text-transform: uppercase; color: var(--accent-ink); }
+.ag-row {
+  display: grid; grid-template-columns: 66px 5px minmax(0, 1fr);
+  column-gap: 14px; align-items: stretch; padding: 4px 0;
+}
+.ag-time { text-align: right; padding-top: 2px; font-size: 16px; font-weight: 600; color: var(--ink2); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.ag-time.now { color: var(--good); font-weight: 800; }
+.ag-bar { border-radius: 3px; background: var(--other); }
+.p0 .ag-bar { background: var(--p0); }
+.p1 .ag-bar { background: var(--p1); }
+.p2 .ag-bar { background: var(--p2); }
+.p3 .ag-bar { background: var(--p3); }
+.both .ag-bar { background: var(--both); }
+.ag-main { min-width: 0; display: flex; align-items: baseline; flex-wrap: wrap; gap: 0 10px; padding: 1px 0 2px; }
+.ag-title { font-size: 19px; font-weight: 700; line-height: 1.25; }
+.ag-place { font-size: 15px; color: var(--muted); }
+.more {
+  margin-top: 10px; background: none; border: 0; padding: 4px 0; cursor: pointer;
+  font-size: 15px; font-weight: 600; color: var(--accent-ink);
+  display: inline-flex; align-items: center; gap: 8px;
+}
+.more svg { width: 16px; height: 16px; transition: transform 240ms var(--ease-out); }
+.more[aria-expanded="true"] svg { transform: rotate(180deg); }
+
+/* ---- shopping ---- */
+.shop-card {
+  display: flex; align-items: center; gap: 14px;
+  text-decoration: none; color: inherit;
+  background: var(--shop-bg); border: 1px solid var(--shop-line); border-radius: 14px; padding: 10px 16px;
+}
+.shop-card:active { transform: scale(0.99); }
+.shop-text { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 1px; }
+.shop-title { font-size: 19px; font-weight: 700; color: var(--accent-ink); }
+.shop-sub { font-size: 14px; color: var(--ink2); }
+.shop-go { width: 26px; height: 26px; flex: none; color: var(--accent-ink); }
+
+/* ---- birthdays ---- */
+/* upcoming holidays: three tiles across, the next one highlighted */
+.hol-list { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 8px; }
+.hol-tile {
+  display: flex; flex-direction: column; align-items: center; text-align: center; gap: 2px;
+  padding: 8px 8px 9px; border-radius: 12px;
+  background: var(--soft); border: 1px solid var(--line);
+}
+.hol-tile.next { background: var(--accent-soft); border-color: color-mix(in srgb, var(--accent) 25%, white); }
+.hol-name { font-size: 16px; font-weight: 600; color: var(--ink); }
+.hol-da { font-size: 12px; font-weight: 500; color: var(--muted); }
+.hol-big { margin-top: 2px; font-size: 30px; font-weight: 600; line-height: 1.05; letter-spacing: -0.6px; color: var(--accent-ink); font-variant-numeric: tabular-nums; }
+.hol-big small { font-size: 14px; font-weight: 500; letter-spacing: 0; margin-left: 3px; color: var(--ink2); }
+.hol-tile.on .hol-big { color: var(--sun); }
+.hol-when { margin-top: 2px; font-size: 12px; color: var(--muted); }
+
+/* ---- dinner and lunch boxes: photo cards, names over the photo, today's picks first ---- */
+.meals {
+  display: grid;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  grid-template-rows: 180px repeat(3, 132px);
+  gap: 8px;
+}
+.meals > li.muted { grid-column: 1 / -1; }
+.meals.empty { display: block; }
+.meal { min-width: 0; min-height: 0; grid-column: span 3; transition: opacity 200ms ease; }
+.meal.is-pick { grid-column: span 4; }
+.m-card {
+  position: relative; display: block; height: 100%;
+  text-decoration: none; color: inherit;
+  border-radius: 12px; overflow: hidden; background: #ece7df;
+}
+.m-card:active { transform: scale(0.98); }
+.m-photo { position: absolute; inset: 0; }
+.m-photo img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.m-name {
+  position: absolute; left: 0; right: 0; bottom: 0;
+  padding: 24px 10px 0;
+  border-bottom: 8px solid transparent;   /* clamp overflow stays hidden (padding would show a third line) */
+  font-size: 15px; font-weight: 700; line-height: 1.18; color: #fff;
+  background: linear-gradient(to bottom, rgba(12, 18, 26, 0) 0%, rgba(12, 18, 26, 0.76) 62%);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.35);
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+}
+.m-sub { display: block; font-size: 12px; font-weight: 600; opacity: 0.9; margin-top: 1px; }
+.meal.is-pick .m-name { font-size: 17px; -webkit-line-clamp: 3; }
+.m-tags { position: absolute; top: 7px; left: 7px; display: flex; gap: 5px; z-index: 1; }
+.tag {
+  font-size: 11px; font-weight: 800; letter-spacing: 0.4px; text-transform: uppercase;
+  padding: 3px 8px; border-radius: 999px;
+  background: rgba(255, 255, 255, 0.94); color: var(--ink2);
+  box-shadow: 0 1px 3px rgba(20, 35, 55, 0.18);
+}
+.tag.pick { background: var(--warm-ring); color: #fff; }
+.tag.quick { color: var(--accent); }
+.meal.is-pick .m-card { box-shadow: 0 0 0 3px var(--warm-ring), 0 4px 12px rgba(200, 100, 28, 0.18); }
+.meal.slow { opacity: 0.42; }
+.lunches .meal.is-pick .m-card { box-shadow: 0 0 0 3px var(--p0), 0 4px 12px rgba(59, 130, 196, 0.2); }
+.lunches .tag.pick { background: var(--p0); }
+
+/* ---- footer ---- */
+.foot {
+  display: flex; justify-content: center; gap: 8px;
+  padding: 6px 0 18px;
+  font-size: 12px; font-weight: 700; letter-spacing: 1.2px; text-transform: uppercase; color: var(--muted);
+}
+
+/* ---- photo of the day behind translucent cards (body.has-photo, set by loadPhoto in app.js) ----
+   The photo stays sharp and fills the screen; cards are 84% white so the text reads first (Alex, 2026-11-23:
+   48% hid the info). No backdrop-filter: on the Tab A8 it dropped scrolling from 60 to about 35 fps. */
+.bg-photo {
+  position: fixed; inset: 0; z-index: -1;
+  background: #1b2430 center / cover no-repeat;
+  opacity: 0; transition: opacity 1.2s ease;
+}
+.bg-photo.on { opacity: 1; }
+body.has-photo { background: #1b2430; }
+body.has-photo .card, body.has-photo .hero {
+  background: rgba(255, 255, 255, 0.84);
+  border: 1px solid rgba(255, 255, 255, 0.55);
+  box-shadow: 0 6px 22px rgba(10, 20, 35, 0.18);
+}
+body.has-photo .plan { background: rgba(255, 248, 236, 0.88); }
+body.has-photo .foot { color: rgba(255, 255, 255, 0.92); text-shadow: 0 1px 3px rgba(0, 0, 0, 0.5); }
+
+@keyframes rise { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: reduce) {
+  .bg-photo { transition: none; }
+  .fold-body { animation: none; }
+  .chev, .more svg { transition: none; }
+  .hero-clock, .hero-quote { will-change: auto; }
+}
